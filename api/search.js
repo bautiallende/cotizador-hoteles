@@ -1,4 +1,4 @@
-import { getHotelsData } from '../src/lib/sheets.js';
+import { getHotelsData } from '../src/lib/sheet.js';
 
 export default async function handler(req, res) {
   try {
