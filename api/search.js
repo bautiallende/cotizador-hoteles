@@ -1,33 +1,22 @@
-// server.js
-// Simple Express server to expose our Google Sheets API
+import { getHotelsData } from '../src/lib/sheets.js';
 
-import express from 'express';
-import dotenv from 'dotenv';
-import { getHotelsData } from './src/lib/sheet.js';
-
-// Load environment variables from .env.local
-dotenv.config({ path: '.env.local' });
-
-const app = express();
-const port = process.env.PORT || 3001;
-
-// JSON endpoint for hotels/search
-app.get('/api/search', async (req, res) => {
-  console.log('>>> /api/search called');
-  console.log('  • GOOGLE_SHEET_ID =', process.env.GOOGLE_SHEET_ID);
-  console.log('  • Credentials present =', Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS));
-
+export default async function handler(req, res) {
   try {
-    const hotels = await getHotelsData();
-    console.log(`>>> getHotelsData resolved, ${hotels.length} hotels loaded`);
-    return res.json({ hotels });
-  } catch (err) {
-    console.error('❌ Error in /api/search:', err.message);
-    console.error(err.stack);
-    return res.status(500).json({ error: 'Failed to load hotels data', details: err.message });
-  }
-});
+    // Parse query params
+    const { date, option, childrenAges } = req.query;
+    // date: { startDate, endDate }
+    const { startDate, endDate } = JSON.parse(date || '{}');
+    const { adult, children, room } = JSON.parse(option || '{}');
+    const ages = JSON.parse(childrenAges || '[]');
 
-app.listen(port, () => {
-  console.log(`Backend server listening at http://localhost:${port}`);
-});
+    // Fetch and structure data
+    const hotels = await getHotelsData();
+
+    // Respond with raw data or implement filtering here
+    // (You can re-use your frontend filtering logic server-side if preferred)
+    res.status(200).json({ hotels });
+  } catch (error) {
+    console.error('API /search error:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
