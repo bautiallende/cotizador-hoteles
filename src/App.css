@@ -3,18 +3,19 @@
 /* header styles */
 .header {
   display: grid;
+  /* 3 columnas: una “relleno”, una de hasta 900px (tu buscador), y otra “relleno” */
+  grid-template-columns: 1fr minmax(auto, 900px) 1fr;
   gap: 1rem;
   align-items: center;
-  justify-items: center;
+  /* justify-items ya no es necesario aquí */
 }
 
-.header__wellcome-text {
-  grid-column: 1/2;
-  font-size: 1rem;
-  font-weight: bold;
-}
 .header__search {
-  grid-column: 2/3;
+  /* Coloca el buscador en la columna central */
+  grid-column: 2;
+  /* Asegura que se auto‐centre dentro de esa columna */
+  justify-self: center;
+
   display: flex;
   width: 100%;
   max-width: 900px;
@@ -24,6 +25,13 @@
   border-radius: 1.5rem;
   padding: 0.8rem 1rem;
 }
+
+.header__wellcome-text {
+  grid-column: 1/2;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
 .header__action-btns {
   grid-column: 3/4;
   display: flex;
@@ -497,4 +505,84 @@
 
 .login-container button {
   width: 100%;
+}
+
+
+/* Centrar y limitar ancho del contenedor de resultados */
+.search-results {
+  max-width: 1280px;
+  margin: 2rem auto;   /* separación arriba/abajo y centrado horizontal */
+  padding: 0 1rem;     /* un poco de respiración lateral */
+}
+
+/* Asegurar que la tabla llene todo el ancho disponible */
+.search-results table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Bordes suaves entre filas */
+.search-results th,
+.search-results td {
+  border-bottom: 1px solid #e5e7eb; /* gris claro */
+}
+
+/* Encabezado fijo al hacer scroll */
+.search-results thead th {
+  position: sticky;
+  top: 0;
+  background: #f9fafb;  /* fondo claro */
+  z-index: 1;
+}
+
+/* Textos y espaciados */
+.search-results th {
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #4b5563; /* gray-600 */
+}
+.search-results td {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem; /* text-sm */
+  color: #374151;      /* gray-700 */
+}
+
+/* Filas alternadas */
+.search-results tbody tr:nth-child(odd) {
+  background: #ffffff;
+}
+.search-results tbody tr:nth-child(even) {
+  background: #f3f4f6; /* gray-100 */
+}
+
+.welcome-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-color);
+  padding: 2rem;
+}
+
+.welcome-box {
+  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  padding: 3rem 2rem;
+  max-width: 500px;
+  text-align: center;
+}
+
+.welcome-box h2 {
+  margin-bottom: 1rem;
+  font-size: 2.25rem;
+  color: var(--text-700);
+}
+
+.welcome-box p {
+  color: var(--text-500);
+  line-height: 1.5;
 }

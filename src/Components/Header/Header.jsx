@@ -1,18 +1,12 @@
-import { MdLocationOn, MdLogin, MdLogout, MdMenu } from "react-icons/md";
-import { HiCalendar, HiMinus, HiPlus, HiSearch } from "react-icons/hi";
-import { useRef, useState } from "react";
+import { MdSearch } from "react-icons/md";
+import { HiCalendar, HiMinus, HiPlus } from "react-icons/hi";
+import { useRef, useState, useEffect } from "react";
 import useOutsideClick from "../../Hooks/useOutsideClick";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { DateRange } from "react-date-range";
 import { format } from "date-fns";
-import {
-  createSearchParams,
-  NavLink,
-  useNavigate,
-  useSearchParams,
-} from "react-router-dom";
-import { useAuth } from "../../Contexts/AuthContext";
+import { createSearchParams, useNavigate, useSearchParams } from "react-router-dom";
 
 let Initial_Option = {
   adult: 1,
@@ -27,142 +21,166 @@ let Initial_Date = {
 };
 
 function Header() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [destination, setDestination] = useState(
-    searchParams.get("destination") || ""
+  // Initialize options from URL
+  let opts;
+  try {
+    opts = JSON.parse(searchParams.get("option"));
+  } catch {
+    opts = null;
+  }
+  const initOption = opts || Initial_Option;
+  const [option, setOption] = useState(initOption);
+
+  const [childrenAges, setChildrenAges] = useState(
+    Array.from({ length: initOption.children }, () => 0)
   );
+  useEffect(() => {
+    setChildrenAges(Array.from({ length: option.children }, () => 0));
+  }, [option.children]);
 
-  if (JSON.parse(searchParams.get("option"))) {
-    Initial_Option = {
-      adult: JSON.parse(searchParams.get("option")).adult,
-      children: JSON.parse(searchParams.get("option")).children,
-      room: JSON.parse(searchParams.get("option")).room,
-    };
+  let dtRaw = null;
+  try {
+    dtRaw = JSON.parse(searchParams.get("date"));
+  } catch {
+    dtRaw = null;
   }
-  const [openOption, setOpenOption] = useState(false);
-  const [option, setOption] = useState(Initial_Option);
+  const initDate = dtRaw
+    ? {
+        startDate: new Date(dtRaw.startDate),
+        endDate: new Date(dtRaw.endDate),
+        key: "selection",
+      }
+    : Initial_Date;
 
-  if (JSON.parse(searchParams.get("date"))) {
-    Initial_Date = {
-      startDate: new Date(JSON.parse(searchParams.get("date")).startDate),
-      endDate: new Date(JSON.parse(searchParams.get("date")).endDate),
-      key: "selection",
-    };
-  }
+  const [date, setDate] = useState(initDate);
   const [openDate, setOpenDate] = useState(false);
-  const [date, setDate] = useState(Initial_Date);
 
-  const navigate = useNavigate();
-
-  const { user, isAuthenticated, logout } = useAuth();
-
+  const [openOption, setOpenOption] = useState(false);
   const dateRef = useRef();
   useOutsideClick(dateRef, "dateDropDown", () => setOpenDate(false));
+  const optionRef = useRef();
+  useOutsideClick(optionRef, "optionDropDown", () => setOpenOption(false));
 
   const handleChangeOption = (operation, type) => {
-    setOption((prev) => {
-      return {
-        ...prev,
-        [type]: operation === "inc" ? option[type] + 1 : option[type] - 1,
-      };
-    });
+    setOption(prev => ({
+      ...prev,
+      [type]: operation === "inc" ? prev[type] + 1 : prev[type] - 1,
+    }));
   };
 
   const handleSearch = () => {
-    const encodedParams = createSearchParams({
-      destination,
+    const params = {
       date: JSON.stringify(date),
       option: JSON.stringify(option),
-    });
-    navigate({
-      pathname: "/hotels",
-      search: encodedParams.toString(),
-    });
+      childrenAges: JSON.stringify(childrenAges),
+    };
+    setSearchParams(params);
   };
 
   return (
-    <div className="header">
-      <div className="header__wellcome-text">
-        {isAuthenticated && <span>Hi, {user.name}</span>}
-      </div>
-
-      <div className="header__search">
+    <div className="header flex items-center justify-between w-full px-6 py-4 bg-white shadow">
+        {/* Company Logo */}
+                {/* Search bar */}
+      <div className="header__search flex justify-center items-center w-full max-w-3xl border rounded-xl p-4 bg-white">
+        {/* Date picker */}
         <div className="header__search-item">
-          <MdLocationOn className="search__icon location" />
-
-          <input
-            className="search__input"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            type="text"
-            name="destination"
-            id="destination"
-            placeholder="Where to go ?"
-          />
-        </div>
-
-        <div className="header__search-item">
-          <HiCalendar className="search__icon date" />
-
+          <HiCalendar className="search__icon" />
           <div
-            className="search__date-dropDown"
+            className="search__date-dropDown cursor-pointer"
             id="dateDropDown"
-            onClick={() => setOpenDate(!openDate)}
+            onClick={() => { setOpenDate(!openDate); setOpenOption(false); }}
           >
             {`${format(date.startDate, "MM/dd/yyyy")} to ${format(
               date.endDate,
               "MM/dd/yyyy"
             )}`}
           </div>
-
           <div ref={dateRef}>
             {openDate && (
               <DateRange
                 className="date-dropDown"
                 ranges={[date]}
-                onChange={(item) => setDate(item.selection)}
+                onChange={item => setDate(item.selection)}
                 minDate={new Date()}
-                moveRangeOnFirstSelection={true}
+                moveRangeOnFirstSelection
               />
             )}
           </div>
         </div>
 
-        <div className="header__search-item">
+        {/* Guest options */}
+        <div className="header__search-item relative" id="optionDropDown" ref={optionRef}>
           <div
-            className="search__options-dropDown"
-            id="optionDropDown"
-            onClick={() => setOpenOption(!openOption)}
+            className="search__options-dropDown cursor-pointer"
+            onClick={() => { setOpenOption(!openOption); setOpenDate(false); }}
           >
-            {option.adult} Adult &bull; {option.children} Children &bull;{" "}
-            {option.room} Room
+            {option.adult} Adult &bull; {option.children} Children &bull; {option.room} Room
           </div>
 
           {openOption && (
-            <GuestOptionList
-              option={option}
-              onChangeOption={handleChangeOption}
-              setOpenOption={setOpenOption}
-            />
+            <div className="options-dropDown bg-white shadow-lg rounded p-4">
+              <GuestOptionItem
+                type="Adult"
+                option={option}
+                minLimit={1}
+                onChangeOption={handleChangeOption}
+              />
+              <GuestOptionItem
+                type="Children"
+                option={option}
+                minLimit={0}
+                onChangeOption={handleChangeOption}
+              />
+              <GuestOptionItem
+                type="Room"
+                option={option}
+                minLimit={1}
+                onChangeOption={handleChangeOption}
+              />
+
+              {option.children > 0 && (
+                <div className="mt-4">
+                  <span className="block mb-2 font-medium">Children's Ages</span>
+                  {childrenAges.map((age, idx) => (
+                    <select
+                      key={idx}
+                      value={age}
+                      onChange={e => {
+                        const newA = [...childrenAges];
+                        newA[idx] = parseInt(e.target.value, 10);
+                        setChildrenAges(newA);
+                      }}
+                      className="p-2 border rounded w-full mb-2"
+                    >
+                      <option value={0}>0</option>
+                      {[...Array(17)].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>
+                          {i + 1}
+                        </option>
+                      ))}
+                    </select>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
+        {/* Search button */}
         <div className="header__search-item">
-          <button className="search__btn" onClick={handleSearch}>
-            <HiSearch className="search__icon" />
+          <button
+            className="search__btn bg-blue-600 text-white rounded px-4 py-2"
+            onClick={handleSearch}
+          >
+            <MdSearch className="search__icon" />
           </button>
         </div>
       </div>
-
-      <div className="header__action-btns">
-        <UserAuthentication
-          isAuthenticated={isAuthenticated}
-          logout={logout}
-          navigate={navigate}
-        />
-
-        <Menu />
+      {/* Company Logo */}
+      <div className="logo ml-6">
+        <img src="/logo.jpg" alt="Company Logo" style={{ height: '70px', width: 'auto' }}/>
       </div>
     </div>
   );
@@ -170,127 +188,26 @@ function Header() {
 
 export default Header;
 
-function GuestOptionList({ option, onChangeOption, setOpenOption }) {
-  const optionRef = useRef();
-  useOutsideClick(optionRef, "optionDropDown", () => setOpenOption(false));
-
-  return (
-    <div className="options-dropDown" ref={optionRef}>
-      <GuestOptionItem
-        type="Adult"
-        option={option}
-        minLimit={1}
-        onChangeOption={onChangeOption}
-      />
-      <GuestOptionItem
-        type="Children"
-        option={option}
-        minLimit={0}
-        onChangeOption={onChangeOption}
-      />
-      <GuestOptionItem
-        type="Room"
-        option={option}
-        minLimit={1}
-        onChangeOption={onChangeOption}
-      />
-    </div>
-  );
-}
-
 function GuestOptionItem({ type, option, minLimit, onChangeOption }) {
   return (
-    <div className="option-item">
-      <span className="option__text">{type}</span>
-
-      <div className="option__counter">
+    <div className="option-item flex justify-between items-center mb-2">
+      <span className="option__text capitalize">{type}</span>
+      <div className="option__counter flex items-center gap-2">
         <button
-          className="option__counter__btn"
+          className="option__counter__btn p-1"
           disabled={option[type.toLowerCase()] <= minLimit}
           onClick={() => onChangeOption("dec", type.toLowerCase())}
         >
-          <HiMinus className="search__icon option" />
+          <HiMinus />
         </button>
-
-        <span>{option[type.toLowerCase()]}</span>
-
+        <span className="font-medium">{option[type.toLowerCase()]}</span>
         <button
-          className="option__counter__btn"
+          className="option__counter__btn p-1"
           onClick={() => onChangeOption("inc", type.toLowerCase())}
         >
-          <HiPlus className="search__icon option" />
+          <HiPlus />
         </button>
       </div>
-    </div>
-  );
-}
-
-function UserAuthentication({ isAuthenticated, logout, navigate }) {
-  const handleAuthentication = () => {
-    if (!isAuthenticated) {
-      navigate("/login");
-    } else {
-      logout();
-      navigate("/");
-    }
-  };
-
-  return (
-    <div className="header__action-btn">
-      <button onClick={handleAuthentication} className="btn btn--primary">
-        {isAuthenticated ? (
-          <>
-            <span>Logout</span>
-            <MdLogout className="header__icon logout" />
-          </>
-        ) : (
-          <>
-            <span>Login</span>
-            <MdLogin className="header__icon login" />
-          </>
-        )}
-      </button>
-    </div>
-  );
-}
-
-function Menu() {
-  const [openMenu, setOpenMenu] = useState(false);
-
-  const menuRef = useRef();
-  useOutsideClick(menuRef, "menuDropDown", () => setOpenMenu(false));
-
-  return (
-    <div className="header__action-btn">
-      <button
-        className="btn btn--primary"
-        id="menuDropdown"
-        onClick={() => setOpenMenu(!openMenu)}
-      >
-        <MdMenu className="header__icon" />
-      </button>
-
-      {openMenu && (
-        <div className="menu-links" ref={menuRef}>
-          <div className="menu__link">
-            <NavLink to={"/"} style={{ display: "block" }}>
-              Home
-            </NavLink>
-          </div>
-
-          <div className="menu__link">
-            <NavLink to={"/hotels"} style={{ display: "block" }}>
-              Hotels
-            </NavLink>
-          </div>
-
-          <div className="menu__link">
-            <NavLink to={"/bookmarks"} style={{ display: "block" }}>
-              Bookmarks
-            </NavLink>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

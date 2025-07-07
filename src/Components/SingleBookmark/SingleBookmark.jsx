@@ -1,61 +1,66 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useBookmarks } from "../../Contexts/BookmarksContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Loader from "../Loader/Loader";
 import { HiChevronDoubleLeft } from "react-icons/hi";
 import { useHotels } from "../../Contexts/HotelsContext";
-import { SearchItem } from "../Hotels/Hotels";
 
-let filteredHotels = [];
-
-function SingleBookmark() {
+export default function SingleBookmark() {
   const { id } = useParams();
-  
   const { currentBookmark, getSingleBookmark, isLoading } = useBookmarks();
-  const { hotels, currentHotel } = useHotels();
-
+  const { hotels } = useHotels();
   const navigate = useNavigate();
+  const [filteredHotels, setFilteredHotels] = useState([]);
 
   useEffect(() => {
     getSingleBookmark(id);
   }, [id]);
 
   useEffect(() => {
-    filteredHotels = hotels.filter(
-      (item) => item.country === currentBookmark.country
-    );
+    if (currentBookmark && hotels) {
+      const list = hotels.filter(
+        (item) => item.country === currentBookmark.country
+      );
+      setFilteredHotels(list);
+    }
   }, [currentBookmark, hotels]);
 
   if (isLoading) return <Loader />;
 
   return (
-    <div>
-      <button className="btn btn--back" onClick={() => navigate(-1)}>
+    <div className="p-4">
+      <button
+        className="btn btn--back mb-4"
+        onClick={() => navigate(-1)}
+      >
         <HiChevronDoubleLeft /> Back
       </button>
 
-      <h2>{currentBookmark.cityName}</h2>
-      <span>{currentBookmark.country}</span>
+      <h2 className="text-2xl font-semibold mb-2">
+        {currentBookmark.cityName}
+      </h2>
+      <span className="text-gray-600 mb-4 block">
+        {currentBookmark.country}
+      </span>
 
-      <div className="bookmarks-list">
+      <div className="bookmarks-list space-y-2">
         {filteredHotels.length === 0 ? (
-          <span
-            style={{
-              textAlign: "center",
-              fontWeight: "bold",
-              color: "var(--text-500)",
-              marginTop: "2rem",
-            }}
-          >
-            There is any hotel in this country!
+          <span className="text-center font-bold text-gray-500 mt-8 block">
+            No hotels found for this country.
           </span>
         ) : (
           filteredHotels.map((item) => (
             <Link
-              key={item.id}
-              to={`/hotels/${item.id}?lat=${item.latitude}&lng=${item.longitude}`}
+              key={item.hotelId}
+              to={`/hotels/${item.hotelId}`}
+              className="block p-4 border rounded hover:bg-gray-50"
             >
-              <SearchItem currentHotel={currentHotel} item={item} />
+              <div className="text-lg font-medium">{item.hotelId}</div>
+              {item.rooms && item.rooms.length > 0 && (
+                <div className="text-sm text-gray-600">
+                  {item.rooms[0].category} - {item.rooms[0].roomCode}
+                </div>
+              )}
             </Link>
           ))
         )}
@@ -63,5 +68,3 @@ function SingleBookmark() {
     </div>
   );
 }
-
-export default SingleBookmark;

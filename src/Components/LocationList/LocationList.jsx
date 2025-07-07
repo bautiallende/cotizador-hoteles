@@ -1,50 +1,66 @@
-import { Link } from "react-router-dom";
-import useFetch from "../../Hooks/useFetch";
+import React from "react";
 import Loader from "../Loader/Loader";
+import { useSearchParams } from "react-router-dom";
+import { useHotels } from "../../Contexts/HotelsContext";
+import ResultsTable from "../ResultsTable/ResultsTable";
 
-function LocationList() {
-  const { data, isLoading } = useFetch(
-    "https://booking-hotel-app-api-eight.vercel.app/hotels",
-    ""
-  );
+/**
+ * LocationList muestra los resultados de búsqueda o el loader.
+ * Si no hay filtros aplicados, muestra un mensaje inicial invitando a buscar.
+ */
+export default function LocationList() {
+  const [searchParams] = useSearchParams();
+  const { hotels, isLoading } = useHotels();
 
-  return (
-    <div className="nearby-locations">
-      <h2 className="locations__heading">Nearby Location</h2>
+  // Validar existencia de filtros
+  const hasDate = Boolean(searchParams.get("date"));
+  const hasOption = Boolean(searchParams.get("option"));
 
-      {isLoading && <Loader />}
-
-      <div className="locations__list">
-        {data.map((item) => {
-          return <LocationItem key={item.id} item={item} />;
-        })}
-      </div>
-    </div>
-  );
-}
-
-export default LocationList;
-
-function LocationItem({ item }) {
-  return (
-    <div className="locations__item">
-      <img
-        className="locations-item__image"
-        src={item.xl_picture_url}
-        alt={item.name}
-      />
-
-      <Link
-        to={`/hotels/${item.id}?lat=${item.latitude}&lng=${item.longitude}`}
-      >
-        <div className="locations-item__desc">
-          <p className="location">{item.smart_location}</p>
-          <p className="name">{item.name}</p>
-          <p className="price">
-            €&nbsp;{item.price}&nbsp;<span>night</span>
+  // Si no hay filtros, mostrar mensaje de bienvenida
+  if (!hasDate || !hasOption) {
+    return (
+      <div className="welcome-wrapper">
+        <div className="welcome-box">
+          <h2>Start Your Search</h2>
+          <p>
+            Please select your travel dates, number of guests, and rooms
+            using the search bar above to view available accommodations.
           </p>
         </div>
-      </Link>
+      </div>
+    );
+  }
+
+  // Extraer y parsear parámetros de búsqueda
+  const dateParam = JSON.parse(searchParams.get("date") || "{}");
+  const checkIn = dateParam.startDate ? new Date(dateParam.startDate) : null;
+  const checkOut = dateParam.endDate ? new Date(dateParam.endDate) : null;
+
+  const optionParam = JSON.parse(searchParams.get("option") || "{}");
+  const adults = optionParam.adult || 1;
+  const children = optionParam.children || 0;
+  const roomsCount = optionParam.room || 1;
+
+  const childrenAges = JSON.parse(searchParams.get("childrenAges") || "[]");
+
+  return (
+    <div className="search-results p-4">
+      <h2 className="text-lg font-semibold mb-4">
+        {/* Search Results: ({hotels.length}) */}
+      </h2>
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <ResultsTable
+          data={hotels}
+          checkIn={checkIn}
+          checkOut={checkOut}
+          adults={adults}
+          children={children}
+          childrenAges={childrenAges}
+          roomsCount={roomsCount}
+        />
+      )}
     </div>
   );
 }
