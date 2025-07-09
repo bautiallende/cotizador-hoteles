@@ -94,7 +94,7 @@ export async function getPriceRules() {
     .map(r => {
       const startDate = parseDateString(r.startDate);
       const endDate   = parseDateString(r.endDate);
-      const basePrice = parseFloat(r.basePrice.replace(/[^0-9.,-]/g, '').replace(',', '.'));
+      const basePrice = parseFloat(r.basePrice.replace(/[^0-9,-]/g, '').replace(',', '.'));
       return { hotelId: r.hotelId, category: r.category, roomCode: r.roomCode,
                capacity: { adults: parseInt(r.adults, 10), children: parseInt(r.children, 10), childAgeRanges: r.childAgeRanges.split(';').map(s=>s.trim()) },
                startDate, endDate, basePrice };
