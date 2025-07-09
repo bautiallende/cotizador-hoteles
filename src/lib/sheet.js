@@ -37,7 +37,7 @@ async function getSheetValues(sheetName) {
   const spreadsheetId = process.env.GOOGLE_SHEET_ID;
   const res = await client.spreadsheets.values.get({
     spreadsheetId,
-    range: `${sheetName}!A1:Z1000`,
+    range: `${sheetName}!A:Z`,
   });
   return res.data.values;
 }
