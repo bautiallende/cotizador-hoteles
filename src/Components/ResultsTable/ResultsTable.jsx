@@ -77,6 +77,9 @@ export default function ResultsTable({ data, checkIn, checkOut, adults, children
   };
 
   const requiredAdultsPerRoom = Math.ceil(adults / roomsCount);
+  function toDay(d) {
+          return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        }
 
   // 5) Filter hotels and rooms
   const filteredHotels = hotels
@@ -85,9 +88,15 @@ export default function ResultsTable({ data, checkIn, checkOut, adults, children
       const validRooms = hotel.rooms.filter(room => {
         const { adults: capAdults, children: capChildren, childAgeRanges } = room.capacity;
         // Price coverage
-        if (!nightDates.every(n => room.priceRules.some(r => n >= r.startDate && n <= r.endDate))) {
-          return false;
-        }
+        if (!nightDates.every(n =>
+          room.priceRules.some(r => {
+            const day = toDay(n);
+            const start = toDay(r.startDate);
+            const end   = toDay(r.endDate);
+            return day >= start && day <= end;
+          })
+        )) return false;
+        
         // No children selected
         if (children === 0) {
           return capChildren === 0 && capAdults >= requiredAdultsPerRoom;
