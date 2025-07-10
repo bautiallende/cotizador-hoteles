@@ -101,9 +101,9 @@ function Header() {
             className="search__date-dropDown cursor-pointer"
             onClick={() => { setOpenDate(!openDate); setOpenOption(false); }}
           >
-            {`${format(date.startDate, "MM/dd/yyyy")} to ${format(
+            {`${format(date.startDate, "dd/MM/yyyy")} to ${format(
               date.endDate,
-              "MM/dd/yyyy"
+              "dd/MM/yyyy"
             )}`}
           </div>
           <div>

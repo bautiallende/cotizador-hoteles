@@ -87,7 +87,7 @@ export async function getPriceRules() {
     child_age_ranges: 'childAgeRanges',
     start_date: 'startDate',
     end_date: 'endDate',
-    base_price: 'basePrice',
+    final_price: 'basePrice',
   });
 
   const rules = rows
