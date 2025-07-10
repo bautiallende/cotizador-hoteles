@@ -1,4 +1,4 @@
-# Booking Hotel App Project
+# BeyTours Booking Hotel App
 
 A web application for searching hotels and adding bookmarks, developed using the React.js library.
 
