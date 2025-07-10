@@ -1,8 +1,9 @@
 import { createContext, useContext } from "react";
 import useFetch from "../Hooks/useFetch";
 
-const HotelsContext = createContext(null);
-const Base_URL = "../api/search";
+// Contexto para hoteles
+export const HotelsContext = createContext(null);
+const Base_URL = "/api/search";
 
 export function HotelsProvider({ children }) {
   // useFetch obtiene { data, isLoading }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 /**
  * ResultsTable Component
@@ -6,6 +7,8 @@ import React from 'react';
  */
 export default function ResultsTable({ data, checkIn, checkOut, adults, children, childrenAges, roomsCount }) {
   const searchDate = new Date();
+  const [searchParams] = useSearchParams();
+  const selectedCity = searchParams.get('city') || '';
   const formatter = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
 
   // 1) Normalize hotel data
@@ -77,6 +80,7 @@ export default function ResultsTable({ data, checkIn, checkOut, adults, children
 
   // 5) Filter hotels and rooms
   const filteredHotels = hotels
+    .filter(hotel => !selectedCity || hotel.city === selectedCity)
     .map(hotel => {
       const validRooms = hotel.rooms.filter(room => {
         const { adults: capAdults, children: capChildren, childAgeRanges } = room.capacity;

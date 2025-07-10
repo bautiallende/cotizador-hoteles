@@ -1,12 +1,13 @@
 import { MdSearch } from "react-icons/md";
 import { HiCalendar, HiMinus, HiPlus } from "react-icons/hi";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useContext, useMemo } from "react";
 import useOutsideClick from "../../Hooks/useOutsideClick";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { DateRange } from "react-date-range";
 import { format } from "date-fns";
 import { createSearchParams, useNavigate, useSearchParams } from "react-router-dom";
+import { HotelsContext } from "../../Contexts/HotelsContext";
 
 let Initial_Option = {
   adult: 1,
@@ -21,7 +22,16 @@ let Initial_Date = {
 };
 
 function Header() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Contexto de hoteles para dropdown de ciudades
+  const { hotels } = useContext(HotelsContext);
+  const cities = useMemo(
+    () => Array.from(new Set(hotels.map(h => h.city))).sort(),
+    [hotels]
+  );
+  const [selectedCity, setSelectedCity] = useState("");
 
   // Initialize options from URL
   let opts;
@@ -64,7 +74,7 @@ function Header() {
   useOutsideClick(optionRef, "optionDropDown", () => setOpenOption(false));
 
   const handleChangeOption = (operation, type) => {
-    setOption(prev => ({
+    setOption((prev) => ({
       ...prev,
       [type]: operation === "inc" ? prev[type] + 1 : prev[type] - 1,
     }));
@@ -75,21 +85,20 @@ function Header() {
       date: JSON.stringify(date),
       option: JSON.stringify(option),
       childrenAges: JSON.stringify(childrenAges),
+      city: selectedCity,
     };
     setSearchParams(params);
   };
 
   return (
     <div className="header flex items-center justify-between w-full px-6 py-4 bg-white shadow">
-        {/* Company Logo */}
-                {/* Search bar */}
+      {/* Search bar */}
       <div className="header__search flex justify-center items-center w-full max-w-3xl border rounded-xl p-4 bg-white">
         {/* Date picker */}
-        <div className="header__search-item">
+        <div className="header__search-item" ref={dateRef}>
           <HiCalendar className="search__icon" />
           <div
             className="search__date-dropDown cursor-pointer"
-            id="dateDropDown"
             onClick={() => { setOpenDate(!openDate); setOpenOption(false); }}
           >
             {`${format(date.startDate, "MM/dd/yyyy")} to ${format(
@@ -97,17 +106,33 @@ function Header() {
               "MM/dd/yyyy"
             )}`}
           </div>
-          <div ref={dateRef}>
+          <div>
             {openDate && (
               <DateRange
                 className="date-dropDown"
                 ranges={[date]}
-                onChange={item => setDate(item.selection)}
+                onChange={(item) => setDate(item.selection)}
                 minDate={new Date()}
                 moveRangeOnFirstSelection
               />
             )}
           </div>
+        </div>
+
+        {/* Selector de ciudad */}
+        <div className="header__search-item">
+          <select
+            value={selectedCity}
+            onChange={(e) => setSelectedCity(e.target.value)}
+            className="p-2 border rounded bg-white"
+          >
+            <option value="">All Cities</option>
+            {cities.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Guest options */}
@@ -147,7 +172,7 @@ function Header() {
                     <select
                       key={idx}
                       value={age}
-                      onChange={e => {
+                      onChange={(e) => {
                         const newA = [...childrenAges];
                         newA[idx] = parseInt(e.target.value, 10);
                         setChildrenAges(newA);
@@ -180,7 +205,7 @@ function Header() {
       </div>
       {/* Company Logo */}
       <div className="logo ml-6">
-        <img src="/logo.jpg" alt="Company Logo" style={{ height: '70px', width: 'auto' }}/>
+        <img src="/logo.jpg" alt="Company Logo" style={{ height: '70px', width: 'auto' }} />
       </div>
     </div>
   );
